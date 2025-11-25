@@ -13,6 +13,28 @@ st.set_page_config(
     layout="wide"
 )
 
+# Custom CSS
+st.markdown("""
+<style>
+.stTextArea textarea {
+    font-size: 1.2rem !important;
+}
+[data-testid="stSidebar"] {
+    font-size: 0.8rem !important;
+}
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    font-size: 1rem !important;
+}
+[data-testid="stSidebar"] p, [data-testid="stSidebar"] li {
+    font-size: 0.8rem !important;
+}
+/* Ensure dataframe font is small */
+.stDataFrame {
+    font-size: 0.8rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Initialize session state
 if 'system_prompt' not in st.session_state:
     st.session_state.system_prompt = "You are a helpful assistant."
@@ -55,6 +77,32 @@ with st.sidebar:
 
 # Main content
 st.title("🎯 Evals Demo")
+# Chat input handler
+def handle_chat_input():
+    prompt = st.session_state.chat_input_val
+    if prompt:
+        if not llm_api_key:
+            st.error("Please enter your API key in the sidebar")
+        else:
+            # Add user message
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            
+            # Call Claude API
+            result = call_claude(
+                api_key=llm_api_key,
+                system_prompt=st.session_state.system_prompt,
+                user_message=prompt,
+                review_context=None
+            )
+            
+            if result['success']:
+                response = result['response']
+            else:
+                response = f"Error: {result['error']}"
+            
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            # Clear input
+            st.session_state.chat_input_val = ""
 
 # Two columns - System Prompt and Chat
 col1, col2 = st.columns(2)
@@ -88,29 +136,19 @@ with col2:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
     
-    # Chat input
-    if prompt := st.chat_input("Ask a question..."):
-        if not llm_api_key:
-            st.error("Please enter your API key in the sidebar")
-        else:
-            # Add user message
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            
-            # Call Claude API
-            result = call_claude(
-                api_key=llm_api_key,
-                system_prompt=st.session_state.system_prompt,
-                user_message=prompt,
-                review_context=None
-            )
-            
-            if result['success']:
-                response = result['response']
-            else:
-                response = f"Error: {result['error']}"
-            
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
+    # Chat input - using text_input to place it right below the container
+    col_input, col_btn = st.columns([6, 1])
+    with col_input:
+        st.text_input(
+            "Ask a question...", 
+            key="chat_input_val", 
+            on_change=handle_chat_input,
+            label_visibility="collapsed",
+            placeholder="Ask a question..."
+        )
+
+    with col_btn:
+        st.button("Send", on_click=handle_chat_input)
 
 # Sample feedbacks table
 st.markdown("---")
