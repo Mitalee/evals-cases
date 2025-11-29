@@ -59,7 +59,7 @@ def call_claude(
                     - department_name: Department (Tops, Dresses, Bottoms, etc.)
                     - class_name: Product class
                     - created_at: Timestamp
-
+    
                     Example queries:
                     - Get reviews for a product: SELECT * FROM feedback_submissions WHERE clothing_id = 1094
                     - Filter by age: SELECT * FROM feedback_submissions WHERE clothing_id = 1094 AND age BETWEEN 30 AND 40
