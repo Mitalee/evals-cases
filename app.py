@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 import sqlite3
 from claude_api import call_claude
+from openai_api import call_openai
 
 # Load environment variables
 load_dotenv()
@@ -53,6 +54,8 @@ if 'current_question_id' not in st.session_state:
     st.session_state.current_question_id = None
 if 'try_counter' not in st.session_state:
     st.session_state.try_counter = {}  # {question_id: try_number}
+if 'selected_brand' not in st.session_state:
+    st.session_state.selected_brand = "Anthropic"
 
 # Evaluation Questions
 EVAL_QUESTIONS = [
@@ -69,8 +72,17 @@ EVAL_QUESTIONS = [
             },
             {
                 "check": "tailored_to_sarah",
-                "description": "Response is personalized - references Sarah by name OR addresses her specific concerns",
-                "keywords": ["sarah", "you're anxious", "you mentioned", "I know you", "your anxiety", "your concerns about returns", "your fit struggles", "your professional", "your work"]
+                "description": "Response is personalized - references Sarah by name OR addresses her specific context",
+                "keywords": [
+                    "sarah",
+                    "you're", "your", "you mentioned", "I know you",  # Personal pronouns showing awareness
+                    "wedding", "upcoming", "special event",  # Her event
+                    "anxious", "anxiety", "concerned", "worried",  # Her emotions
+                    "return", "returns", "exchange",  # Her aversion
+                    "between sizes", "fit", "sizing",  # Her struggle
+                    "professional", "work", "presentation",  # Her needs
+                    "budget", "spend", "$150"  # Her constraint
+                ]
             }
         ],
         "pass_criteria": "Both assertions must pass",
@@ -89,8 +101,17 @@ EVAL_QUESTIONS = [
             },
             {
                 "check": "tailored_to_sarah",
-                "description": "Response is personalized - references Sarah by name OR addresses her specific concerns",
-                "keywords": ["sarah", "you're anxious", "you mentioned", "I know you", "your anxiety", "your concerns about returns", "your fit struggles", "your professional", "your work"]
+                "description": "Response is personalized - references Sarah by name OR addresses her specific context",
+                "keywords": [
+                    "sarah",
+                    "you're", "your", "you mentioned", "I know you",  # Personal pronouns showing awareness
+                    "wedding", "upcoming", "special event",  # Her event
+                    "anxious", "anxiety", "concerned", "worried",  # Her emotions
+                    "return", "returns", "exchange",  # Her aversion
+                    "between sizes", "fit", "sizing",  # Her struggle
+                    "professional", "work", "presentation",  # Her needs
+                    "budget", "spend", "$150"  # Her constraint
+                ]
             }
         ],
         "pass_criteria": "Both assertions must pass",
@@ -109,8 +130,17 @@ EVAL_QUESTIONS = [
             },
             {
                 "check": "tailored_to_sarah",
-                "description": "Response is personalized - references Sarah by name OR addresses her specific concerns",
-                "keywords": ["sarah", "you're anxious", "you mentioned", "I know you", "your anxiety", "your concerns about returns", "your fit struggles", "your professional", "your work"]
+                "description": "Response is personalized - references Sarah by name OR addresses her specific context",
+                "keywords": [
+                    "sarah",
+                    "you're", "your", "you mentioned", "I know you",  # Personal pronouns showing awareness
+                    "wedding", "upcoming", "special event",  # Her event
+                    "anxious", "anxiety", "concerned", "worried",  # Her emotions
+                    "return", "returns", "exchange",  # Her aversion
+                    "between sizes", "fit", "sizing",  # Her struggle
+                    "professional", "work", "presentation",  # Her needs
+                    "budget", "spend", "$150"  # Her constraint
+                ]
             }
         ],
         "pass_criteria": "Both assertions must pass",
@@ -157,9 +187,19 @@ with st.sidebar:
     
     st.markdown("---")
     
-    st.header("🔑 API Key")
-    llm_api_key = st.text_input("Anthropic API Key:", type="password", 
-                            help="Get your API key from console.anthropic.com")
+    st.header("🤖 LLM Provider & API Key")
+    st.session_state.selected_brand = st.radio(
+        "Select Provider:",
+        ["Anthropic", "OpenAI"],
+        index=0 if st.session_state.selected_brand == "Anthropic" else 1
+    )
+    
+    if st.session_state.selected_brand == "Anthropic":
+        llm_api_key = st.text_input("Anthropic API Key:", type="password", 
+                                help="Get your API key from console.anthropic.com")
+    else:
+        llm_api_key = st.text_input("OpenAI API Key:", type="password", 
+                                help="Get your API key from platform.openai.com")
     
     st.markdown("---")
 
@@ -284,7 +324,7 @@ with tab1:
     
     conn.close()
     
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width='stretch', hide_index=True)
     
     st.markdown("""
     ---
@@ -335,23 +375,35 @@ with tab2:
                 # print("🔍 User message:", prompt)
                 # print("🔍 System prompt:", effective_system_prompt)
                 # print("🔍 Use DB tool:", use_db_tool)
-                # print("🔍 CALLING CLAUDE API")
-                # Call Claude API
-                result = call_claude(
-                    api_key=llm_api_key,
-                    system_prompt=effective_system_prompt,
-                    user_message=prompt,
-                    review_context=None,
-                    use_tool=use_db_tool,
-                    conversation_history=conversation_history
-                )
+                
+                # Call appropriate API based on selected brand
+                if st.session_state.selected_brand == "Anthropic":
+                    # print("🔍 CALLING CLAUDE API")
+                    result = call_claude(
+                        api_key=llm_api_key,
+                        system_prompt=effective_system_prompt,
+                        user_message=prompt,
+                        review_context=None,
+                        use_tool=use_db_tool,
+                        conversation_history=conversation_history
+                    )
+                else:  # OpenAI
+                    # print("🔍 CALLING OPENAI API")
+                    result = call_openai(
+                        api_key=llm_api_key,
+                        system_prompt=effective_system_prompt,
+                        user_message=prompt,
+                        review_context=None,
+                        use_tool=use_db_tool,
+                        conversation_history=conversation_history
+                    )
                 
                 if result['success']:
                     response = result['response']
-                    print("🔍 SUCCESS - Response preview:", response[:200] if len(response) > 200 else response)
+                    # print("🔍 SUCCESS - Response preview:", response[:200] if len(response) > 200 else response)
                 else:
                     response = f"Error: {result['error']}"
-                    print("🔍 ERROR Response:", response)
+                    # print("🔍 ERROR Response:", response)
                 
                 
                 st.session_state.messages.append({"role": "assistant", "content": response})
@@ -482,7 +534,7 @@ with tab2:
             height=80
         )
         
-        st.button("Send", on_click=handle_chat_input, use_container_width=True)
+        st.button("Send", on_click=handle_chat_input, width='stretch')
 
     # Evaluation Questions Section
     st.markdown("---")
@@ -548,7 +600,7 @@ with tab2:
                 
                 st.button(label, key=f"q_{q_id}", 
                          on_click=set_question, args=(q_text, q_id), 
-                         use_container_width=True)
+                         width='stretch')
 
 # Footer
 st.markdown("---")
