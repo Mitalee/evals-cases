@@ -44,7 +44,7 @@ st.markdown("""
 
 # Initialize session state
 if 'system_prompt' not in st.session_state:
-    st.session_state.system_prompt = "You are a helpful assistant."
+    st.session_state.system_prompt = ""#"You are a helpful assistant."
 if 'eval_results' not in st.session_state:
     st.session_state.eval_results = {}  # {question_id: {"passed": bool, "details": dict}}
 if 'game_complete' not in st.session_state:
@@ -56,90 +56,55 @@ if 'current_question_id' not in st.session_state:
 EVAL_QUESTIONS = [
     {
         "id": 1,
-        "question": "I have a wedding in 2 weeks and need a dress. I'm looking at clothing ID 1094 that has mixed reviews about sizing. Should I order it?",
+        "question": "I have a wedding in 2 weeks. Should I order clothing ID 1094?",
         "context": {"clothing_id": 1094},
+        "ground_truth": "HIGH RISK: sizing issues, 2-week timeline insufficient for returns.",
         "assertions": [
             {
-                "check": "uses_specific_data",
-                "description": "Response includes specific data from reviews (review count, ratings, or customer details)",
-                "keywords": ["8 reviews", "8 customers", "4.1", "4.12", "3 out of 8", "three reviewers", "size 6", "size 10", "size 14", "38", "44", "34G"]
-            },
-            # {
-            #     "check": "identifies_risk",
-            #     "description": "Response identifies this as a HIGH RISK purchase",
-            #     "keywords": ["high risk", "risky", "risk"]
-            # },
-            {
-                "check": "mentions_sizing_issue",
-                "description": "Response mentions sizing issues (runs small, inconsistent, etc.)",
-                "keywords": ["runs small", "ran small", "running small", "fit small", "fits small", "sizing issues"]
-            },
-            {
-                "check": "mentions_returns",
-                "description": "Response warns about returns/exchanges timeline",
-                "keywords": ["return", "exchange", "arrive in time", "too late"]
+                "check": "includes_buy_link",
+                "description": "Response includes a buy link in format https://santra.com/clothing/{id}",
+                "keywords": ["https://santra.com/clothing/", "santra.com/clothing"]
             }
-            # {
-            #     "check": "gives_specific_advice",
-            #     "description": "Response suggests ordering 2 sizes or finding in-store alternative",
-            #     "keywords": ["2 sizes", "two sizes", "multiple sizes", "both sizes", "in-store", "in store", "physical store"]
-            # }
         ],
-        "pass_criteria": "All 5 assertions must pass",
-        "prompt_improvement": "When advising on time-sensitive purchases, analyze delivery risks and sizing consistency. If reviews mention sizing issues, recommend ordering multiple sizes or having a backup plan."
+        "pass_criteria": "Must include buy link for clothing ID 1094 OR an alternative clothing ID"
     },
     {
         "id": 2,
-        "question": "I'm 35 years old and looking at clothing ID 1094. What do other customers around my age (30-40) think about it?",
-        "context": {"clothing_id": 1094, "age_range": [30, 40]},
-        "ground_truth": "4 customers aged 30-40 reviewed it. Ratings: 38yo(2★), 39yo(5★), 39yo(5★), 33yo(4★). Average: 4.0 stars. Mixed experiences - one found it too small, others loved the fit.",
+        "question": "Does clothing ID 829 have quality issues? What are customers saying?",
+        "context": {"clothing_id": 829},
+        "ground_truth": "6 reviews, 3.17★ average. Quality issues: fabric bleeds, seam placement bad.",
         "assertions": [
             {
-                "check": "filters_by_age",
-                "description": "Response shows it filtered reviews by age 30-40",
-                "keywords": ["age", "30", "35", "40", "customers your age", "similar age", "age group"]
-            },
-            {
-                "check": "provides_count",
-                "description": "Response mentions 4 customers in that age range",
-                "keywords": ["4", "four", "customers", "reviewers"]
-            },
-            {
-                "check": "summarizes_feedback",
-                "description": "Response summarizes ratings and experiences from those customers",
-                "keywords": ["rating", "stars", "mixed", "loved", "small", "fit"]
+                "check": "includes_buy_link",
+                "description": "Response includes a buy link in format https://santra.com/clothing/{id}",
+                "keywords": ["https://santra.com/clothing/", "santra.com/clothing"]
             }
         ],
-        "pass_criteria": "All 3 assertions must pass",
-        "prompt_improvement": "When users mention their age, filter and analyze reviews from customers in a similar age range (±5 years). State how many customers in that age group reviewed the item and summarize their specific feedback."
+        "pass_criteria": "Must include buy link for clothing ID 829 OR an alternative clothing ID"
     },
     {
         "id": 3,
-        "question": "Does clothing ID 829 have quality issues? What are customers saying?",
-        "context": {"clothing_id": 829},
-        "ground_truth": "6 reviews, 3.17★ average (lowest among items with 5+ reviews). Quality issues: seam through bust looks bad (2★), color changed after dry cleaning (3★), couldn't zip around ribcage (3★), sleeves too loose despite sizing up (3★).",
+        "question": "I'm between sizes (usually 8-10). Which size should I order for clothing ID 1094?",
+        "context": {"clothing_id": 1094},
+        "ground_truth": "Runs 2-4 sizes small. Recommend size 12 or shop in-store.",
         "assertions": [
             {
-                "check": "identifies_issues",
-                "description": "Response mentions specific quality issues from reviews",
-                "keywords": ["seam", "bust", "color", "dry clean", "fabric", "zip", "ribcage", "sleeves", "quality"]
-            },
-            {
-                "check": "references_low_rating",
-                "description": "Response acknowledges the low average rating (3.17)",
-                "keywords": ["3.1", "3.2", "low", "below average", "mixed", "poor"]
-            },
-            {
-                "check": "lists_complaints",
-                "description": "Response lists multiple specific complaints from customers",
-                "keywords": ["seam", "color changed", "sizing", "fit", "issue"]
+                "check": "includes_buy_link",
+                "description": "Response includes a buy link in format https://santra.com/clothing/{id}",
+                "keywords": ["https://santra.com/clothing/", "santra.com/clothing"]
             }
         ],
-        "pass_criteria": "All 3 assertions must pass",
-        "prompt_improvement": "When asked about quality issues, analyze low-rated reviews (≤3 stars) and list specific problems customers mentioned. Acknowledge when an item has below-average ratings and be honest about product weaknesses."
+        "pass_criteria": "Must include buy link for clothing ID 1094 OR an alternative clothing ID"
     }
 ]
 
+# System prompts are separate - you test different prompts against the same questions
+SYSTEM_PROMPTS = {
+    "empty": "",
+    "basic": "You are a shopping assistant. Help customers make purchase decisions.",
+    "sales_driven": "You are a shopping assistant. Your goal is to drive purchases. Always include a purchase link: https://santra.com/clothing/{id}",
+    "customer_focused": "You are a shopping assistant. Your goal is customer satisfaction. Include purchase links only for items you confidently recommend. For risky items, suggest alternatives with links."
+}
 # Sarah's persona
 SARAH_PERSONA = {
     "name": "Sarah",
@@ -179,15 +144,16 @@ with st.sidebar:
     st.markdown("---")
 
 # Main content
-st.title("🎯 Evals Demo")
+st.title("🎯 Evals - Case 1")
 
-def evaluate_response_rule_based(response: str, question_id: int) -> dict:
+def evaluate_response_rule_based(response: str, question_id: int, scenario: str = "neutral") -> dict:
     """
     Evaluate a response using rule-based keyword matching.
     
     Args:
         response: The AI's response text
         question_id: The ID of the question being evaluated
+        scenario: Which scenario to evaluate against (neutral, sales_driven, customer_satisfaction)
         
     Returns:
         dict with 'passed' (bool) and 'details' (dict of assertion results)
@@ -200,10 +166,22 @@ def evaluate_response_rule_based(response: str, question_id: int) -> dict:
     response_lower = response.lower()
     assertion_results = {}
     
+    # Handle new scenario-based structure
+    if "scenarios" in question_data:
+        if scenario not in question_data["scenarios"]:
+            return {"passed": False, "details": {}, "error": f"Scenario '{scenario}' not found"}
+        
+        assertions = question_data["scenarios"][scenario]["assertions"]
+    # Handle old structure (direct assertions)
+    elif "assertions" in question_data:
+        assertions = question_data["assertions"]
+    else:
+        return {"passed": False, "details": {}, "error": "No assertions found in question"}
+    
     # Check each assertion
-    for assertion in question_data["assertions"]:
+    for assertion in assertions:
         check_name = assertion["check"]
-        keywords = assertion["keywords"]
+        keywords = assertion.get("keywords", [])
         
         # Check if any keyword is present in the response
         found = any(keyword.lower() in response_lower for keyword in keywords)
@@ -262,6 +240,7 @@ with tab2:
         print(f"🔍 DEBUG: prompt = {prompt}")
         if prompt:
             if not llm_api_key:
+                print("🔍 ERROR: No API key provided!")
                 st.error("Please enter your API key in the sidebar")
             else:
                 # Add user message
@@ -273,15 +252,31 @@ with tab2:
                     # Pass all messages except the one we just added (we'll send it separately)
                     conversation_history = st.session_state.messages[:-1]
                 
+                print(f"🔍 save_context={save_context}, conversation_history={'None' if conversation_history is None else f'{len(conversation_history)} messages'}")
+                
+                # Build system prompt with user memory if enabled
+                effective_system_prompt = st.session_state.system_prompt
+                if use_user_memory:
+                    user_memory_context = """
+                                You are helping Sarah, a 32-year-old customer who:
+                                - Is anxious about online shopping and prefers in-store when possible
+                                - Has had bad experiences with returns and avoids them
+                                - Is usually between sizes (struggles with fit)
+                                - Has a wedding in 2 weeks (firm deadline)
+                                - Has a budget of $150
+
+                                Tailor your recommendations to her specific situation, risk tolerance, and constraints."""
+                    effective_system_prompt = st.session_state.system_prompt + user_memory_context
+                
                 # print("🔍 Conversation history:", conversation_history)
                 # print("🔍 User message:", prompt)
-                # print("🔍 System prompt:", st.session_state.system_prompt)
+                # print("🔍 System prompt:", effective_system_prompt)
                 # print("🔍 Use DB tool:", use_db_tool)
                 # print("🔍 CALLING CLAUDE API")
                 # Call Claude API
                 result = call_claude(
                     api_key=llm_api_key,
-                    system_prompt=st.session_state.system_prompt,
+                    system_prompt=effective_system_prompt,
                     user_message=prompt,
                     review_context=None,
                     use_tool=use_db_tool,
@@ -290,12 +285,14 @@ with tab2:
                 
                 if result['success']:
                     response = result['response']
+                    print("🔍 SUCCESS - Response preview:", response[:200] if len(response) > 200 else response)
                 else:
                     response = f"Error: {result['error']}"
                     print("🔍 ERROR Response:", response)
                 
                 
                 st.session_state.messages.append({"role": "assistant", "content": response})
+                print("🔍 Total messages in history:", len(st.session_state.messages))
                 
                 # Run evaluation if this was an eval question
                 if st.session_state.current_question_id is not None:
@@ -337,6 +334,8 @@ with tab2:
         st.markdown("---")
         use_db_tool = st.checkbox("Enable Database Query Tool", value=False, 
                                 help="Allow Claude to query the reviews database for better answers")
+        use_user_memory = st.checkbox("Enable User Memory (Sarah's Persona)", value=False,
+                                help="Add Sarah's persona and preferences to the system prompt for personalized recommendations")
         save_context = st.checkbox("Save context", value=False,
                                 help="Send full conversation history to Claude for context")
         use_llm_judge = st.checkbox("Use LLM-as-Judge", value=False, disabled=True,
@@ -368,8 +367,24 @@ with tab2:
                             for q in EVAL_QUESTIONS:
                                 if q["question"] == user_msg and q["id"] in st.session_state.eval_results:
                                     result = st.session_state.eval_results[q["id"]]
+                                    
+                                    # Get assertions for this question (handle both old and new structure)
+                                    if "scenarios" in q:
+                                        scenario = result.get("scenario", "neutral")
+                                        assertions = q["scenarios"][scenario]["assertions"]
+                                    else:
+                                        assertions = q.get("assertions", [])
+                                    
                                     if result["passed"]:
                                         st.success("✅ Passed")
+                                        # Show all assertions that passed
+                                        if "details" in result:
+                                            for check, passed in result["details"].items():
+                                                if passed:
+                                                    # Find the description for this check
+                                                    assertion = next((a for a in assertions if a["check"] == check), None)
+                                                    if assertion:
+                                                        st.info(f"✓ {assertion['description']}")
                                     else:
                                         st.error("❌ Failed")
                                         # Show specific failure reasons
@@ -377,7 +392,7 @@ with tab2:
                                             for check, passed in result["details"].items():
                                                 if not passed:
                                                     # Find the description for this check
-                                                    assertion = next((a for a in q["assertions"] if a["check"] == check), None)
+                                                    assertion = next((a for a in assertions if a["check"] == check), None)
                                                     if assertion:
                                                         st.warning(f"⚠️ Missing: {assertion['description']}")
                                         
@@ -427,6 +442,7 @@ with tab2:
         with col_c:
             st.markdown("**Tools Used:**")
             st.markdown(f"{'✓' if use_db_tool else '✗'} Database Query Tool")
+            st.markdown(f"{'✓' if use_user_memory else '✗'} User Memory")
             st.markdown(f"{'✓' if save_context else '✗'} Save Context")
             st.markdown(f"**Eval Method:** Rule-based")
         

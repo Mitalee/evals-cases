@@ -38,20 +38,43 @@ def call_claude(
         # Define tools if enabled
         tools = []
         if use_tool:
+            """
+            The problem: Claude doesn't know the correct schema! It's guessing column names.
+            The fix: Update the tool description to include the schema:
+            """
             tools = [{
-                "name": "query_reviews",
-                "description": "Query the customer reviews database to get information about products, reviews, sizing, ratings, etc.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "sql_query": {
-                            "type": "string",
-                            "description": "SQL query to run against the feedback_submissions table"
+                        "name": "query_reviews",
+                        "description": """Query the customer reviews database to get information about products, reviews, sizing, ratings, etc.
+
+                    Available columns in feedback_submissions table:
+                    - id: Review ID (primary key)
+                    - clothing_id: Product identifier
+                    - age: Customer age
+                    - title: Review title
+                    - review_text: Full review content
+                    - rating: Star rating (1-5)
+                    - recommended_ind: Whether customer recommends (0 or 1)
+                    - positive_feedback_count: Number of helpful votes
+                    - division_name: Product division
+                    - department_name: Department (Tops, Dresses, Bottoms, etc.)
+                    - class_name: Product class
+                    - created_at: Timestamp
+
+                    Example queries:
+                    - Get reviews for a product: SELECT * FROM feedback_submissions WHERE clothing_id = 1094
+                    - Filter by age: SELECT * FROM feedback_submissions WHERE clothing_id = 1094 AND age BETWEEN 30 AND 40
+                    - Get average rating: SELECT AVG(rating) FROM feedback_submissions WHERE clothing_id = 1094""",
+                        "input_schema": {
+                            "type": "object",
+                            "properties": {
+                                "sql_query": {
+                                    "type": "string",
+                                    "description": "SQL query to run against the feedback_submissions table"
+                                }
+                            },
+                            "required": ["sql_query"]
                         }
-                    },
-                    "required": ["sql_query"]
-                }
-            }]
+                    }]
 
         # Build messages array
         messages = []
