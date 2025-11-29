@@ -102,7 +102,7 @@ def call_claude(
         message = client.messages.create(**kwargs)
         
         # Debug: print the initial Claude response for inspection
-        print("CLAUDE API: Claude initial response:", message)
+        # print("CLAUDE API: Claude initial response:", message)
         
         # If tool usage is detected, handle it and send results back to Claude
         if message.stop_reason == "tool_use":
@@ -114,7 +114,7 @@ def call_claude(
             try:
                 cursor.execute(tool_use.input["sql_query"])
                 results = cursor.fetchall()
-                print("CLAUDE API: Tool execution results:", results)
+                # print("CLAUDE API: Tool execution results:", results)
                 tool_result_text = "\n".join(str(row) for row in results)
             except Exception as e:
                 tool_result_text = f"Error executing query: {e}"
@@ -122,7 +122,7 @@ def call_claude(
             finally:
                 conn.close()
             
-            print("CLAUDE API: Tool results:", results)
+            # print("CLAUDE API: Tool results:", results)
             
             # Send tool results back to Claude for a natural language response
             messages.append({
@@ -149,7 +149,7 @@ def call_claude(
                 tools=tools
             )
             
-            print("CLAUDE API: Claude final response:", final_message)
+            # print("CLAUDE API: Claude final response:", final_message)
             
             return {
                 "success": True,
