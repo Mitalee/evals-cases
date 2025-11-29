@@ -51,6 +51,8 @@ if 'game_complete' not in st.session_state:
     st.session_state.game_complete = False
 if 'current_question_id' not in st.session_state:
     st.session_state.current_question_id = None
+if 'try_counter' not in st.session_state:
+    st.session_state.try_counter = {}  # {question_id: try_number}
 
 # Evaluation Questions
 EVAL_QUESTIONS = [
@@ -58,43 +60,61 @@ EVAL_QUESTIONS = [
         "id": 1,
         "question": "I have a wedding in 2 weeks. Should I order clothing ID 1094?",
         "context": {"clothing_id": 1094},
-        "ground_truth": "HIGH RISK: sizing issues, 2-week timeline insufficient for returns.",
+        "ground_truth": "HIGH RISK: sizing issues, quality concerns. Sarah is anxious about online shopping and hates returns.",
         "assertions": [
             {
                 "check": "includes_buy_link",
                 "description": "Response includes a buy link in format https://santra.com/clothing/{id}",
                 "keywords": ["https://santra.com/clothing/", "santra.com/clothing"]
+            },
+            {
+                "check": "tailored_to_sarah",
+                "description": "Response is personalized - references Sarah by name OR addresses her specific concerns",
+                "keywords": ["sarah", "you're anxious", "you mentioned", "I know you", "your anxiety", "your concerns about returns", "your fit struggles", "your professional", "your work"]
             }
         ],
-        "pass_criteria": "Must include buy link for clothing ID 1094 OR an alternative clothing ID"
+        "pass_criteria": "Both assertions must pass",
+        "prompt_improvement": "Add Sarah's context to your system prompt. Reference her by name and address her specific concerns (anxiety about online shopping, return aversion, fit struggles)."
     },
     {
         "id": 2,
-        "question": "Does clothing ID 829 have quality issues? What are customers saying?",
+        "question": "Does clothing ID 829 have quality issues?",
         "context": {"clothing_id": 829},
-        "ground_truth": "6 reviews, 3.17★ average. Quality issues: fabric bleeds, seam placement bad.",
+        "ground_truth": "Yes, quality issues exist. Sarah needs reliable clothing for work presentations.",
         "assertions": [
             {
                 "check": "includes_buy_link",
                 "description": "Response includes a buy link in format https://santra.com/clothing/{id}",
                 "keywords": ["https://santra.com/clothing/", "santra.com/clothing"]
+            },
+            {
+                "check": "tailored_to_sarah",
+                "description": "Response is personalized - references Sarah by name OR addresses her specific concerns",
+                "keywords": ["sarah", "you're anxious", "you mentioned", "I know you", "your anxiety", "your concerns about returns", "your fit struggles", "your professional", "your work"]
             }
         ],
-        "pass_criteria": "Must include buy link for clothing ID 829 OR an alternative clothing ID"
+        "pass_criteria": "Both assertions must pass",
+        "prompt_improvement": "Connect the quality issues to Sarah's specific needs (professional settings, work presentations). Show you understand her context."
     },
     {
         "id": 3,
         "question": "I'm between sizes (usually 8-10). Which size should I order for clothing ID 1094?",
         "context": {"clothing_id": 1094},
-        "ground_truth": "Runs 2-4 sizes small. Recommend size 12 or shop in-store.",
+        "ground_truth": "Runs 2-4 sizes small. Sarah struggles with fit and needs confident guidance.",
         "assertions": [
             {
                 "check": "includes_buy_link",
                 "description": "Response includes a buy link in format https://santra.com/clothing/{id}",
                 "keywords": ["https://santra.com/clothing/", "santra.com/clothing"]
+            },
+            {
+                "check": "tailored_to_sarah",
+                "description": "Response is personalized - references Sarah by name OR addresses her specific concerns",
+                "keywords": ["sarah", "you're anxious", "you mentioned", "I know you", "your anxiety", "your concerns about returns", "your fit struggles", "your professional", "your work"]
             }
         ],
-        "pass_criteria": "Must include buy link for clothing ID 1094 OR an alternative clothing ID"
+        "pass_criteria": "Both assertions must pass",
+        "prompt_improvement": "Acknowledge Sarah's fit struggles and give her confident, specific advice. Reduce her anxiety with personalized guidance."
     }
 ]
 
@@ -144,7 +164,7 @@ with st.sidebar:
     st.markdown("---")
 
 # Main content
-st.title("🎯 Evals - Case 1")
+st.title("🎯 Evals - Clothing Recommendations")
 
 def evaluate_response_rule_based(response: str, question_id: int, scenario: str = "neutral") -> dict:
     """
@@ -201,35 +221,76 @@ def set_question(question_text, question_id):
     st.session_state.current_question_id = question_id
 
 # Create tabs
-# tab1, tab2 = st.tabs(["📚 Case Study", "🎯 Evals"])
-tab2, = st.tabs(["🎯 Evals"])  # Comma unpacks the single-element tuple
+tab1, tab2 = st.tabs(["📚 Case Study", "🎯 Evals"])
+# tab2, = st.tabs(["🎯 Evals"])  # Comma unpacks the single-element tuple
 
-# Tab 1: Case Study - Sample Reviews
-# with tab1:
-    # st.header("Sample Customer Reviews")
-    # st.markdown("""
-    # Study this schema and sample data before moving to the Evals section. 
-    # This database contains customer reviews for clothing items.
-    # """)
+#Tab 1: Case Study - Sample Reviews
+with tab1:
+    st.header("🎮 The Challenge")
     
-    # # Get some reviews from database
-    # import pandas as pd
+    st.markdown("""
+    ## Build an AI Shopping Assistant That Actually Helps Customers Buy
     
-    # conn = sqlite3.connect('data/evals_demo.db')
+    **The Problem:** Your AI analyzes reviews perfectly but forgets to help customers take action.
     
-    # # print("Fetching reviews from database..., ", conn)
-    # # Fetch reviews
-    # df = pd.read_sql_query("""
-    #     SELECT id, clothing_id, age, rating, department_name, 
-    #            substr(review_text, 1, 150) || '...' as review_preview
-    #     FROM feedback_submissions 
-    #     LIMIT 10
-    # """, conn)
+    **Your Mission:** Make it commercial-ready in 3 prompts.
     
-    # conn.close()
+    ---
     
-    # # Display as table
-    # st.dataframe(df, use_container_width=True, hide_index=True)
+    ### ⚡ Quick Setup
+    
+    - **Platform:** Santra.com (e-commerce clothing)
+    - **Customer:** Sarah, 32, needs a dress for wedding in 2 weeks
+    - **AI Tool:** Can query customer reviews database
+    - **Your Job:** Write prompts that pass evals
+    
+    ---
+    
+    ### 🎯 Win Condition: Pass 2 Evals
+    
+    **Eval 1: Commercial Behavior**  
+    ✅ Include buy link: `https://santra.com/clothing/{id}`
+    
+    **Eval 2: Personalization**  
+    ✅ Address Sarah by name OR reference her concerns
+    
+    ---
+    
+    ### 🎮 How to Play
+    
+    1. Ask question → Both evals fail ❌❌
+    2. Add buy link instruction to prompt → One passes ✅❌
+    3. Add Sarah's context to prompt → Both pass ✅✅
+    4. **You win!** 🎉
+    
+    💡 **Pro tip:** Sarah's profile is in the sidebar
+    
+    ---
+    
+    ### 📊 Sample Data
+    """)
+    
+    # Show sample data
+    import pandas as pd
+    conn = sqlite3.connect('data/evals_demo.db')
+    
+    df = pd.read_sql_query("""
+        SELECT clothing_id, rating, age, department_name, 
+               substr(review_text, 1, 100) || '...' as review_preview
+        FROM feedback_submissions 
+        WHERE clothing_id IN (1094, 829)
+        LIMIT 6
+    """, conn)
+    
+    conn.close()
+    
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    
+    st.markdown("""
+    ---
+    
+    **Ready?** → **Evals** tab 🚀
+    """)
 
 # Tab 2: Evals - Main Interface
 with tab2:
@@ -257,15 +318,17 @@ with tab2:
                 # Build system prompt with user memory if enabled
                 effective_system_prompt = st.session_state.system_prompt
                 if use_user_memory:
-                    user_memory_context = """
-                                You are helping Sarah, a 32-year-old customer who:
-                                - Is anxious about online shopping and prefers in-store when possible
-                                - Has had bad experiences with returns and avoids them
-                                - Is usually between sizes (struggles with fit)
-                                - Has a wedding in 2 weeks (firm deadline)
-                                - Has a budget of $150
+                    user_memory_context = f"""
+                        You are helping {SARAH_PERSONA['name']}, a {SARAH_PERSONA['age']}-year-old customer who:
+                        - {SARAH_PERSONA['context']}
+                        - {SARAH_PERSONA['pain_point']}
+                        - Budget: {SARAH_PERSONA['budget']}
+                        - Goal: {SARAH_PERSONA['goal']}
 
-                                Tailor your recommendations to her specific situation, risk tolerance, and constraints."""
+                        Customer behaviors:
+                        {chr(10).join(f'- {behavior}' for behavior in SARAH_PERSONA['behaviors'])}
+
+                        Tailor your recommendations to her specific situation, risk tolerance, and constraints."""
                     effective_system_prompt = st.session_state.system_prompt + user_memory_context
                 
                 # print("🔍 Conversation history:", conversation_history)
@@ -296,10 +359,18 @@ with tab2:
                 
                 # Run evaluation if this was an eval question
                 if st.session_state.current_question_id is not None:
+                    # Increment try counter for this question
+                    q_id = st.session_state.current_question_id
+                    if q_id not in st.session_state.try_counter:
+                        st.session_state.try_counter[q_id] = 0
+                    st.session_state.try_counter[q_id] += 1
+                    
                     eval_result = evaluate_response_rule_based(
                         response, 
                         st.session_state.current_question_id
                     )
+                    # Add try number to the result
+                    eval_result['try_number'] = st.session_state.try_counter[q_id]
                     st.session_state.eval_results[st.session_state.current_question_id] = eval_result
                     
                     # Check if game is complete (all questions answered)
@@ -368,6 +439,11 @@ with tab2:
                                 if q["question"] == user_msg and q["id"] in st.session_state.eval_results:
                                     result = st.session_state.eval_results[q["id"]]
                                     
+                                    # Show try number
+                                    try_num = result.get('try_number', 1)
+                                    st.markdown(f"**📝 Try #{try_num}**")
+                                    st.markdown("---")
+                                    
                                     # Get assertions for this question (handle both old and new structure)
                                     if "scenarios" in q:
                                         scenario = result.get("scenario", "neutral")
@@ -376,28 +452,24 @@ with tab2:
                                         assertions = q.get("assertions", [])
                                     
                                     if result["passed"]:
-                                        st.success("✅ Passed")
-                                        # Show all assertions that passed
-                                        if "details" in result:
-                                            for check, passed in result["details"].items():
-                                                if passed:
-                                                    # Find the description for this check
-                                                    assertion = next((a for a in assertions if a["check"] == check), None)
-                                                    if assertion:
-                                                        st.info(f"✓ {assertion['description']}")
+                                        st.success("✅ Passed - All assertions met!")
                                     else:
-                                        st.error("❌ Failed")
-                                        # Show specific failure reasons
-                                        if "details" in result:
-                                            for check, passed in result["details"].items():
-                                                if not passed:
-                                                    # Find the description for this check
-                                                    assertion = next((a for a in assertions if a["check"] == check), None)
-                                                    if assertion:
-                                                        st.warning(f"⚠️ Missing: {assertion['description']}")
-                                        
-                                        if "prompt_improvement" in q:
-                                            st.info(f"💡 **Tip:** {q['prompt_improvement']}")
+                                        st.error("❌ Failed - Some assertions not met")
+                                    
+                                    # Show ALL assertions with their status (passed or failed)
+                                    if "details" in result:
+                                        for check, passed in result["details"].items():
+                                            # Find the description for this check
+                                            assertion = next((a for a in assertions if a["check"] == check), None)
+                                            if assertion:
+                                                if passed:
+                                                    st.success(f"✅ {assertion['description']}")
+                                                else:
+                                                    st.error(f"❌ {assertion['description']}")
+                                    
+                                    # Show improvement tip if available and failed
+                                    if not result["passed"] and "prompt_improvement" in q:
+                                        st.info(f"💡 **Tip:** {q['prompt_improvement']}")
                                     break
         
         # Chat input - using text_area for better visibility of long questions
@@ -453,6 +525,7 @@ with tab2:
             st.session_state.eval_results = {}
             st.session_state.game_complete = False
             st.session_state.messages = []
+            st.session_state.try_counter = {}
             st.rerun()
             
     else:
@@ -482,8 +555,8 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 20px;'>
-        <p style='font-size: 0.9rem;'>Built with ❤️ by Mitalee</p>
-        <p style='font-size: 0.8rem;'>Powered by Claude AI • Anthropic • Gemini Pro • Visual Studio Code</p>
+        <p style='font-size: 0.9rem;'>Making AI quality a habit ❤️</p>
+        <p style='font-size: 0.8rem;'>Powered by Claude AI • Anthropic • Visual Studio Code • GitHub Copilot</p>
     </div>
     """,
     unsafe_allow_html=True
