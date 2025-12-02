@@ -61,7 +61,7 @@ if 'selected_brand' not in st.session_state:
 EVAL_QUESTIONS = [
     {
         "id": 1,
-        "question": "I have a wedding in 2 weeks. Should I order clothing ID 1094?",
+        "question": "I need professional clothing for work presentations. Should I order clothing ID 1094?",
         "context": {"clothing_id": 1094},
         "ground_truth": "HIGH RISK: sizing issues, quality concerns. Sarah is anxious about online shopping and hates returns.",
         "assertions": [
@@ -72,21 +72,19 @@ EVAL_QUESTIONS = [
             },
             {
                 "check": "tailored_to_sarah",
-                "description": "Response is personalized - references Sarah by name OR addresses her specific context",
+                "description": "Response mentions Sarah by name AND references at least one specific detail about her (sizing struggles, return aversion, anxiety, presentation needs, or $150 budget)",
                 "keywords": [
                     "sarah",
-                    "you're", "your", "you mentioned", "I know you",  # Personal pronouns showing awareness
-                    "wedding", "upcoming", "special event",  # Her event
-                    "anxious", "anxiety", "concerned", "worried",  # Her emotions
-                    "return", "returns", "exchange",  # Her aversion
-                    "between sizes", "fit", "sizing",  # Her struggle
-                    "professional", "work", "presentation",  # Her needs
-                    "budget", "spend", "$150"  # Her constraint
+                    "between sizes",
+                    "hate returns", "hates returns", "return aversion", "avoid returns",
+                    "anxious about online", "anxiety about shopping",
+                    "work presentation", "professional presentation",
+                    "$150 budget", "budget of $150"
                 ]
             }
         ],
         "pass_criteria": "Both assertions must pass",
-        "prompt_improvement": "Add Sarah's context to your system prompt. Reference her by name and address her specific concerns (anxiety about online shopping, return aversion, fit struggles)."
+        "prompt_improvement": "Add Sarah's context to your system prompt. Reference her BY NAME and address her specific concerns (anxiety about online shopping, return aversion, fit struggles, presentation needs)."
     },
     {
         "id": 2,
@@ -101,21 +99,16 @@ EVAL_QUESTIONS = [
             },
             {
                 "check": "tailored_to_sarah",
-                "description": "Response is personalized - references Sarah by name OR addresses her specific context",
+                "description": "Response mentions Sarah by name AND connects quality concerns to her professional/presentation needs",
                 "keywords": [
                     "sarah",
-                    "you're", "your", "you mentioned", "I know you",  # Personal pronouns showing awareness
-                    "wedding", "upcoming", "special event",  # Her event
-                    "anxious", "anxiety", "concerned", "worried",  # Her emotions
-                    "return", "returns", "exchange",  # Her aversion
-                    "between sizes", "fit", "sizing",  # Her struggle
-                    "professional", "work", "presentation",  # Her needs
-                    "budget", "spend", "$150"  # Her constraint
+                    "work presentation", "professional presentation", "professional setting",
+                    "presentation needs", "professional needs"
                 ]
             }
         ],
         "pass_criteria": "Both assertions must pass",
-        "prompt_improvement": "Connect the quality issues to Sarah's specific needs (professional settings, work presentations). Show you understand her context."
+        "prompt_improvement": "Connect the quality issues to Sarah's specific needs (professional settings, work presentations). Mention her BY NAME."
     },
     {
         "id": 3,
@@ -130,21 +123,17 @@ EVAL_QUESTIONS = [
             },
             {
                 "check": "tailored_to_sarah",
-                "description": "Response is personalized - references Sarah by name OR addresses her specific context",
+                "description": "Response mentions Sarah by name AND acknowledges her return aversion or anxiety about getting sizing wrong",
                 "keywords": [
                     "sarah",
-                    "you're", "your", "you mentioned", "I know you",  # Personal pronouns showing awareness
-                    "wedding", "upcoming", "special event",  # Her event
-                    "anxious", "anxiety", "concerned", "worried",  # Her emotions
-                    "return", "returns", "exchange",  # Her aversion
-                    "between sizes", "fit", "sizing",  # Her struggle
-                    "professional", "work", "presentation",  # Her needs
-                    "budget", "spend", "$150"  # Her constraint
+                    "hate returns", "hates returns", "avoid returns", "return aversion",
+                    "anxious about", "anxiety", "get it right the first time",
+                    "between sizes struggle", "sizing struggles"
                 ]
             }
         ],
         "pass_criteria": "Both assertions must pass",
-        "prompt_improvement": "Acknowledge Sarah's fit struggles and give her confident, specific advice. Reduce her anxiety with personalized guidance."
+        "prompt_improvement": "Acknowledge Sarah's fit struggles BY NAME and address her return aversion. Give her confident, specific sizing advice that reduces her anxiety."
     }
 ]
 
@@ -159,16 +148,16 @@ SYSTEM_PROMPTS = {
 SARAH_PERSONA = {
     "name": "Sarah",
     "age": 32,
-    "context": "Has a wedding to attend in 2 weeks",
-    "goal": "Find a dress that fits well and looks elegant",
+    "context": "Needs professional clothing for upcoming work presentations",
+    "goal": "Find clothing that fits well and looks professional",
     "pain_point": "Usually between sizes (struggles with fit)",
-    "time_constraint": "Needs it in 2 weeks (some buffer for returns)",
+    "time_constraint": "Needs it in 2 weeks",
     "budget": "Willing to spend up to $150",
     "behaviors": [
         "Reads reviews carefully, especially about sizing",
         "Anxious about online shopping",
         "Values honest opinions over marketing fluff",
-        "Will return if it doesn't fit perfectly"
+        "Hates returns - wants to get it right the first time"
     ]
 }
 
