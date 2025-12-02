@@ -258,41 +258,45 @@ with tab1:
     st.header("🎮 The Challenge")
     
     st.markdown("""
-    ## Build an AI Shopping Assistant That Actually Helps Customers Buy
+    ## Build an AI Shopping Assistant That Drives Revenue
     
-    **The Problem:** Your AI analyzes reviews perfectly but forgets to help customers take action.
+    **The Context:** This is a monetization case study for Santra.com's recommendation engine.
     
-    **Your Mission:** Make it commercial-ready in 3 prompts.
+    **The Goal:** Create a personalized assistant that provides shopping links to drive revenue impact.
+    
+    **Your Mission:** Write a system prompt that passes all 3 evaluation questions.
     
     ---
     
     ### ⚡ Quick Setup
     
     - **Platform:** Santra.com (e-commerce clothing)
-    - **Customer:** Sarah, 32, needs a dress for wedding in 2 weeks
-    - **AI Tool:** Can query customer reviews database
-    - **Your Job:** Write prompts that pass evals
+    - **Customer:** Sarah, 32, needs professional clothing for upcoming work presentations
+    - **AI Tool:** Can query customer reviews database (optional)
+    - **Your Job:** Write prompts that pass all evals
     
     ---
     
-    ### 🎯 Win Condition: Pass 2 Evals
+    ### 🎯 Win Condition: Pass All 3 Questions
     
-    **Eval 1: Commercial Behavior**  
+    Each question has **2 assertions** that must BOTH pass:
+    
+    **Assertion 1: Commercial Behavior**  
     ✅ Include buy link: `https://santra.com/clothing/{id}`
     
-    **Eval 2: Personalization**  
-    ✅ Address Sarah by name OR reference her concerns
+    **Assertion 2: Personalization**  
+    ✅ Mention Sarah BY NAME + reference her specific concerns (sizing struggles, return aversion, anxiety, presentation needs, or budget)
     
     ---
     
     ### 🎮 How to Play
     
-    1. Ask question → Both evals fail ❌❌
-    2. Add buy link instruction to prompt → One passes ✅❌
-    3. Add Sarah's context to prompt → Both pass ✅✅
-    4. **You win!** 🎉
+    1. Click a question → Send without system prompt → Both assertions fail ❌❌
+    2. Add buy link instruction to prompt → One assertion passes ✅❌
+    3. Add Sarah's persona to prompt (use her name + specific details) → Both pass ✅✅
+    4. Repeat for all 3 questions → **You win!** 🎉
     
-    💡 **Pro tip:** Sarah's profile is in the sidebar
+    💡 **Pro tip:** Sarah's full profile is in the sidebar - reference her BY NAME and address her specific pain points
     
     ---
     
@@ -319,6 +323,13 @@ with tab1:
     ---
     
     **Ready?** → **Evals** tab 🚀
+    
+    ---
+    
+    ### 🤝 Contribute
+    
+    Want to add more assertions, new eval cases, or fix bugs?  
+    PMs are welcome to vibe code and raise PRs at: [github.com/Mitalee/evals-cases](https://github.com/Mitalee/evals-cases)
     """)
 
 # Tab 2: Evals - Main Interface
@@ -597,7 +608,8 @@ st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 20px;'>
         <p style='font-size: 0.9rem;'>Making AI quality a habit ❤️</p>
-        <p style='font-size: 0.8rem;'>Powered by Claude AI • Anthropic • Visual Studio Code • GitHub Copilot</p>
+        <p style='font-size: 0.8rem;'>Hosted at <a href='https://evals-cases-ms.streamlit.app/' target='_blank'>evals-cases-ms.streamlit.app</a></p>
+        <p style='font-size: 0.8rem;'>Built with ☕ + 🤖 by mmulpuru</p>
     </div>
     """,
     unsafe_allow_html=True
