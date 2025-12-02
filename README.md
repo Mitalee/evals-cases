@@ -33,67 +33,64 @@ You'll need an Anthropic API key from [console.anthropic.com](https://console.an
 
 ### Meet Sarah
 - 32-year-old professional
-- Has a wedding in 2 weeks
-- Needs a dress that fits well
+- Needs professional clothing for upcoming work presentations
+- Needs it in 2 weeks
 - Usually between sizes (struggles with fit)
+- Anxious about online shopping
+- Hates returns - wants to get it right the first time
 - Budget: $150
 
-### Her 5 Questions
+### Her 3 Questions
 
-1. **Urgency Test**: "I have a wedding in 2 weeks... should I risk ordering it?"
-2. **Demographic Analysis**: "What do other customers around my age think?"
-3. **Personalization**: "I'm between M and L, which size should I order?"
-4. **Risk Management**: "What's my backup plan if it doesn't work?"
-5. **Value Assessment**: "Is this worth $120, or should I look elsewhere?"
+1. **Purchase Decision**: "I need professional clothing for work presentations. Should I order clothing ID 1094?"
+2. **Quality Assessment**: "Does clothing ID 829 have quality issues?"
+3. **Sizing Guidance**: "I'm between sizes (usually 8-10). Which size should I order for clothing ID 1094?"
 
 ### The Progressive Improvement Flow
 
 **Question 1 → Fails**
 - AI gives generic advice
-- Doesn't consider timeline
-- Add instruction: "Consider time constraints and shipping times"
+- Doesn't include buy link
+- Doesn't personalize to Sarah
+- Add instruction: "Include buy links and mention Sarah by name with her specific concerns"
 - Re-run → Passes! ✅
 
 **Question 2 → Fails**
-- AI doesn't filter by age
-- Doesn't analyze demographics
-- Add instruction: "Analyze demographic data when asked about segments"
+- Missing personalization to Sarah's professional needs
+- Add instruction: "Connect recommendations to Sarah's work presentation context"
 - Re-run → Passes! ✅
 
-...and so on for all 5 questions!
+...and so on for all 3 questions!
 
 ## 🎮 How to Use
 
 1. **Start with Question 1**
    - Review Sarah's question
-   - See the review context
-   - Enter your API key
-   - Click "Run Evaluation"
+   - Enter your API key in the sidebar
+   - Click a question button to populate the chat
+   - Click "Send"
 
 2. **Check Results**
    - See AI's response
    - Automatic evaluation shows pass/fail
-   - Missing elements highlighted
+   - Both assertions must pass: Commercial Behavior (buy link) + Personalization (mention Sarah + her concerns)
 
 3. **Improve When Failed**
-   - Suggested prompt improvement shown
-   - Click "Add to System Prompt"
-   - Re-run evaluation
+   - Review the failure reason and tip
+   - Update your system prompt
+   - Click the question again and "Send"
    - See the improvement!
 
-4. **Progress Through All 5 Questions**
+4. **Progress Through All 3 Questions**
    - Each failure teaches a lesson
    - System prompt gets better incrementally
    - Final prompt is production-ready!
 
 ## 📊 What Gets Evaluated
 
-For each response, we check if it includes:
-- **Timeline consideration** (for urgency questions)
-- **Demographic insights** (for segment questions)
-- **Specific recommendations** (for personalization)
-- **Risk mitigation** (for planning questions)
-- **Value assessment** (for budget questions)
+For each response, we check 2 assertions:
+1. **Commercial Behavior**: Includes buy link in format `https://santra.com/clothing/{id}`
+2. **Personalization**: Mentions Sarah BY NAME + references her specific concerns (sizing struggles, return aversion, anxiety, presentation needs, or budget)
 
 ## 🏗️ Project Structure
 
@@ -115,20 +112,14 @@ evals-demo/
 4. **Use real scenarios** - Sarah's questions expose real gaps
 5. **Measure improvement** - quantify before/after
 
-## 🚀 Deployment
+## 🚀 Live Demo
 
-This app can be deployed on Streamlit Cloud:
-
-1. Push to GitHub
-2. Connect to [streamlit.app](https://streamlit.io/cloud)
-3. Deploy in one click!
-
-Similar to: [GenZ Talk AI](https://genztalkai-mitalee.streamlit.app/)
+Hosted at: [evals-cases-ms.streamlit.app](https://evals-cases-ms.streamlit.app/)
 
 ## 🤝 Contributing
 
-Have ideas for better eval questions? Suggestions for prompt improvements?
-Open an issue or PR!
+Want to add more assertions, new eval cases, or fix bugs?  
+PMs are welcome to vibe code and raise PRs at: [github.com/Mitalee/evals-cases](https://github.com/Mitalee/evals-cases)
 
 ## 📝 License
 
@@ -136,4 +127,4 @@ MIT License
 
 ---
 
-Built with ❤️ by Mitalee | Powered by Claude & Streamlit
+Built with ☕ + 🤖 by mmulpuru
